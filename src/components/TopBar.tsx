@@ -91,7 +91,7 @@ export class TopBar extends React.Component<ITopBarProps, ITopBarState> {
                             </>
                         :
                             <>
-                                <p>To continue, please login to ${PACKAGE_NAME}</p>
+                                <p>To continue, please login to {PACKAGE_NAME}</p>
                                 <PrimaryButton
                                     text={`Sign in`}
                                     onClick={this.startLogin} />

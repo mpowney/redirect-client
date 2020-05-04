@@ -1,12 +1,12 @@
 import Home from "entries/Home";
 import NotFound from "entries/NotFound";
-import Link from "entries/Link";
+import RecycledLinks from "entries/RecycledLinks";
 import Links from "entries/Links";
 
 const routes = [
     { path: "/", exact: true, component: Home },
     { path: "/links", exact: true, component: Links },
-    { path: "/links/:linkId", exact: true, component: Link },
+    { path: "/links/recycled", exact: true, component: RecycledLinks },
     { path: "", exact: false, component: NotFound }
 ];
 

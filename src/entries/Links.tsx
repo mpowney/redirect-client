@@ -44,6 +44,7 @@ export interface ILink {
 
 interface ILinksProps {
     user: IUser;
+    recycled: boolean;
 }
 interface ILinksPersistedState {
     LinksSorting: ISortingInformation[];
@@ -63,7 +64,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
     constructor(props) {
         super(props);
 
-        this.userColumnClick = this.userColumnClick.bind(this);
+        this.linksColumnClick = this.linksColumnClick.bind(this);
         this.dismissLinkPanel = this.dismissLinkPanel.bind(this);
         this.linkClick = this.linkClick.bind(this);
         this.closeAddModalClick = this.closeAddModalClick.bind(this);
@@ -91,8 +92,8 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
     }
 
     private _selection: ISelection;
-    private _getKey(item: any, index?: number): string {
-        log.debug(`_getKey() executed with item ${JSON.stringify(item)} and index ${index}`);
+    private _getKey(item: any/*, index?: number*/): string {
+        // log.debug(`_getKey() executed with item ${JSON.stringify(item)} and index ${index}`);
         return item.key;
     }
 
@@ -107,12 +108,12 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
           />);
     }
 
-    private userColumnClick = (
+    private linksColumnClick = (
         ev: React.MouseEvent<HTMLElement>,
         column: IColumn
     ): void => {
         log.debug(
-            `userColumnClick() executed with column ${JSON.stringify(
+            `linksColumnClick() executed with column ${JSON.stringify(
                 column
             )}, event target ${JSON.stringify(ev.pageY)}`
         );
@@ -177,12 +178,20 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         if (this.props.user) {
 
             log.debug(`User logged in, calling API`);
-            const sourceLinks = await ApiHelper.get(`/_api/v1/redirects`, this.props.user.accessToken);
+            const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, this.props.user.accessToken);
             this.setState({
                 LinksLoading: false,
                 LinksSourceData: sourceLinks
             });
 
+        }
+        else {
+
+            log.debug(`User not logged in`);
+            this.setState({
+                LinksLoading: false,
+                LinksSourceData: []
+            });
         }
 
     };
@@ -197,6 +206,33 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         this.setState({
             isAddModalOpen: false
         });
+    }
+
+    applySorting(items, sorting) {
+        let returnItems = [...(items || [])];
+        log.debug(`applySorting with options: ${JSON.stringify(sorting)}`);
+        for (const sortOption of sorting) {
+            returnItems.sort((a, b) => {
+                if (sortOption.isSortedDescending) {
+                    if (a[sortOption.fieldName] > b[sortOption.fieldName]) {
+                        return -1;
+                    }
+                    if (a[sortOption.fieldName] < b[sortOption.fieldName]) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (a[sortOption.fieldName] < b[sortOption.fieldName]) {
+                        return -1;
+                    }
+                    if (a[sortOption.fieldName] > b[sortOption.fieldName]) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+        }
+        return returnItems;
     }
 
     render() {
@@ -252,11 +288,12 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         };
 
         const columns = new LinksColumns();
-        const items = this.state.LinksSourceData;
+        // const items = this.state.LinksSourceData;
 
-        // const items = this._applySorting(
-        //     (this.state.LinksSearchData || this.state.LinksSourceData)
-        // );
+        const items = this.applySorting(
+            (this.state.LinksSearchData || this.state.LinksSourceData),
+            this.state.LinksSorting
+        );
 
         return (
             <>
@@ -264,7 +301,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                 <main id={`viewport`} className={styles.Links}>
                     <DocumentMeta {...meta} />
                     <Header />
-                    <h1>Active Links</h1>
+                    <h1>{this.props.recycled ? `Recycle bin` : `Active Links`}</h1>
                     <CommandBar styles={{ root: { padding: 0 } }}
                         items={commandBarItems}
                         farItems={commandBarFarItems} />
@@ -273,7 +310,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                         items={items}
                         compact={false}
                         columns={columns.Columns(
-                            this.userColumnClick,
+                            this.linksColumnClick,
                             this.state.LinksSorting,
                             this.state.LinksLoading
                         )}

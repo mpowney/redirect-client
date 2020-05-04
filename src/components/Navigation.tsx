@@ -44,7 +44,7 @@ export class Navigation extends React.Component<INavigationProps, INavigationSta
                             links: [
                                 { key: "Links", name: "Links", url: "/links", icon: "Link" },
                                 { key: "ManageLinks", name: "Manage links", url: "/links" },
-                                { key: "AddLink", name: "Add new link", url: "/links/add" }
+                                { key: "RecycledLinks", name: "Recycle bin", url: "/links/recycled" }
                             ]
                         }
                     ]}

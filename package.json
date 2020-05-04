@@ -1,5 +1,5 @@
 {
-    "name": "azure-rediect-admin",
+    "name": "azure-redirect-client",
     "version": "1.0.0",
     "description": "Azure Redirect Admin User Interface",
     "main": "index.js",
@@ -12,7 +12,7 @@
         "dev": "npm run build:dev && webpack-dev-server --config build/dev.conf.js",
         "tasklist": "forever list",
         "lint": "npm run lint:ts && npm run lint:style",
-        // "lint:ts": "tslint -e node_modules typings -c .tslintrc.json src/**/*.tsx",
+        "lint:ts": "tslint -e node_modules typings -c .tslintrc.json src/**/*.tsx",
         "lint:style": "stylelint \"src/**/*.less\" --syntax less",
         "lint-staged": "lint-staged",
         "lint-staged:ts": "tslint --fix -c .tslintrc.json",
@@ -22,16 +22,13 @@
     },
     "lint-staged": {
         "src/**/*.{ts,tsx}": [
-            "lint-staged:ts",
-            "git add"
+            "lint-staged:ts"
         ],
         "src/**/*.less": [
             "lint-staged:format",
-            "lint-staged:style",
-            "git add"
+            "lint-staged:style"
         ]
     },
-    "pre-commit": "lint-staged",
     "devDependencies": {
         "@microsoft/microsoft-graph-types": "^1.12.0",
         "@types/node": "^9.4.6",
@@ -80,6 +77,7 @@
         "babel-polyfill": "^6.26.0",
         "classnames": "^2.2.5",
         "copy-to-clipboard": "^3.3.1",
+        "luxon": "1.23.0",
         "mobx": "^3.5.1",
         "mobx-react": "^4.4.2",
         "msal": "^1.2.1",

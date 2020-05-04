@@ -11,11 +11,14 @@ export default class LinksColumns {
         sorting: ISortingInformation[],
         isLoading: boolean
     ): IColumn[] {
+
+        const { DateTime } = require("luxon");
+
         let columns = [
             {
-                key: `column1`,
+                key: `rowKey`,
                 name: "Short name",
-                fieldName: "RowKey",
+                fieldName: "rowKey",
                 minWidth: 100,
                 maxWidth: 200,
                 isRowHeader: true,
@@ -36,9 +39,9 @@ export default class LinksColumns {
                 isPadded: true
             },
             {
-                key: `column2`,
+                key: `redirectTo`,
                 name: "Redirect to",
-                fieldName: "RediectTo",
+                fieldName: "redirectTo",
                 minWidth: 90,
                 maxWidth: 150,
                 isResizable: true,
@@ -58,19 +61,21 @@ export default class LinksColumns {
                 isPadded: true
             },
             {
-                key: `column3`,
+                key: `created`,
                 name: "Date created",
-                fieldName: "Created",
+                fieldName: "created",
                 minWidth: 120,
                 maxWidth: 240,
                 isResizable: true,
+                sortAscendingAriaLabel: "Sorted earliest to latest",
+                sortDescendingAriaLabel: "Sorted latest to earliest",
                 isCollapsible: true,
                 data: "string",
                 onColumnClick: (event: any, column: any) => {
                     onColumnClick(event, column);
                 },
                 onRender: (item: ILink) => {
-                    return isLoading ? <Shimmer width={`${70 + Math.floor(Math.random() * 10)}%`} /> : <>{item.created}</>;
+                    return isLoading ? <Shimmer width={`${70 + Math.floor(Math.random() * 10)}%`} /> : <>{DateTime.fromISO(item.created).toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}</>;
                 },
                 isPadded: true
             }
