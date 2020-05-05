@@ -20,7 +20,7 @@ import { ContextualMenu } from "office-ui-fabric-react/lib/ContextualMenu";
 import { AddLink } from "../components/AddLink";
 
 const log = LogFactory.getLogger("Links.tsx");
-const styles = require("../assets/styles/entries/Links.less");
+const styles = require("../assets/styles/entries/Links.module.scss");
 const meta = {
     title: "Links",
     description: "",

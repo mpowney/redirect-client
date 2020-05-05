@@ -9,7 +9,7 @@ import { LogFactory } from "../common/utils/InitLogger";
 
 const log = LogFactory.getLogger("Link.tsx");
 
-// const styles = require("../assets/styles/entries/Link.less");
+// const styles = require("../assets/styles/entries/Link.module.scss");
 // const meta = {
 //     title: "Link",
 //     description: "",

@@ -10,7 +10,7 @@ import Config from "../common/utils/Config";
 import ApiHelper from "../common/utils/ApiHelper";
 import { IUser } from "../App";
 
-const styles = require("../assets/styles/components/AddLink.less");
+const styles = require("../assets/styles/components/AddLink.module.scss");
 const log = LogFactory.getLogger("AddLink.tsx");
 
 interface IAddLinkProps {

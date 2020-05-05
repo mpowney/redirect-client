@@ -2,7 +2,7 @@ import * as React from "react";
 import { LogFactory } from "../common/utils/InitLogger";
 import { PACKAGE_NAME } from "../App";
 
-const styles = require("../assets/styles/components/Header.less");
+const styles = require("../assets/styles/components/Header.module.scss");
 const log = LogFactory.getLogger("Header.tsx");
 
 interface IHeaderProps {

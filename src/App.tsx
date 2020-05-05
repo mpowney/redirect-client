@@ -14,9 +14,9 @@ import { LogFactory } from "./common/utils/InitLogger";
 import Config from "./common/utils/Config";
 import "office-ui-fabric-core/dist/css/fabric.min.css";
 
-require("./assets/styles/global.less");
+require("./assets/styles/global.scss");
 
-const styles = require("./assets/styles/app.less");
+const styles = require("./assets/styles/app.scss");
 const log = LogFactory.getLogger("app.tsx");
 
 export const PACKAGE_NAME = "Azure Redirects";

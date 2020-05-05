@@ -28,7 +28,7 @@ export class Navigation extends React.Component<INavigationProps, INavigationSta
 
     render() {
 
-        const styles = require("../assets/styles/components/Navigation.less");
+        const styles = require("../assets/styles/components/Navigation.module.scss");
 
         return (
             <div className={styles.navigation}>

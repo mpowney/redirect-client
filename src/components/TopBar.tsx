@@ -5,7 +5,6 @@ import { Panel } from "office-ui-fabric-react/lib/Panel";
 import { LogFactory } from "../common/utils/InitLogger";
 import { IUser, PACKAGE_NAME } from "../App";
 
-const styles = require("../assets/styles/components/TopBar.less");
 const log = LogFactory.getLogger("TopBar.tsx");
 
 interface ITopBarProps {
@@ -62,11 +61,13 @@ export class TopBar extends React.Component<ITopBarProps, ITopBarState> {
     }
 
     render() {
-        log.debug(`render() executing`);
+        const styles = require("../assets/styles/components/TopBar.module.scss");
+
+        log.debug(`render() executing: ${JSON.stringify(styles)}}`);
 
         return (
-            <div className={styles.TopBar}>
-                <div className={styles.AccountButton}>
+            <div className={`${styles.topBar}`}>
+                <div className={`${styles.accountButton}`}>
                     <IconButton
                         onClick={this.userButtonClick}
                         iconProps={{ iconName: this.props.userLoggedIn ? `UserFollowed` : `UserOptional` }}

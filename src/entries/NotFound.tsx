@@ -1,7 +1,7 @@
 import * as React from "react";
 import DocumentMeta from "react-document-meta";
 
-const styles = require("../assets/styles/entries/NotFound.less");
+const styles = require("../assets/styles/entries/NotFound.module.scss");
 const bg = require("../assets/images/404.jpg");
 const meta = {
     title: "404 Not Found",
