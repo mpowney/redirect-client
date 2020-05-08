@@ -7,16 +7,15 @@ import { Modal, IDragOptions } from "office-ui-fabric-react/lib/Modal";
 
 import Navigation from "../components/Navigation";
 import Header from "../components/Header";
-import Link from "./Link";
 import { LogFactory } from "../common/utils/InitLogger";
 import LinksColumns from "../components/LinksColumns";
 import ISortingInformation from "../common/utils/ISortingInformation";
-import { IColumn, SelectionMode, DetailsListLayoutMode, DetailsList, ISelection } from "office-ui-fabric-react/lib/DetailsList";
+import { IColumn, SelectionMode, DetailsListLayoutMode, DetailsList, Selection } from "office-ui-fabric-react/lib/DetailsList";
 import { IUser } from "../App";
 import ApiHelper from "../common/utils/ApiHelper";
-import { Panel } from "office-ui-fabric-react/lib/Panel";
 import { IconButton } from "office-ui-fabric-react/lib/Button";
 import { ContextualMenu } from "office-ui-fabric-react/lib/ContextualMenu";
+import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
 import { AddLink } from "../components/AddLink";
 
 const log = LogFactory.getLogger("Links.tsx");
@@ -52,14 +51,16 @@ interface ILinksPersistedState {
 }
 interface ILinksState extends ILinksPersistedState {
     LinksLoading: boolean;
-    ShowLink: ILink | undefined;
+    ShowLink?: ILink;
     LinksSourceData: ILink[];
     LinksSearchData?: ILink[];
-    isAddModalOpen: boolean;
+    isLinkModalOpen: boolean;
+    numberOfLinksSelected: number;
 }
 
 export default class LinksEntry extends React.Component<ILinksProps, ILinksState> {
     static STORE_CLASSES = [];
+    private _selection: Selection;
     
     constructor(props: ILinksProps) {
         super(props);
@@ -67,9 +68,12 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         this.linksColumnClick = this.linksColumnClick.bind(this);
         this.dismissLinkPanel = this.dismissLinkPanel.bind(this);
         this.linkClick = this.linkClick.bind(this);
+        this.linkActive = this.linkActive.bind(this);
         this.closeAddModalClick = this.closeAddModalClick.bind(this);
         this.addButtonClick = this.addButtonClick.bind(this);
         this.initLinks = this.initLinks.bind(this);
+        this.deleteLinks = this.deleteLinks.bind(this);
+        this.restoreLinks = this.restoreLinks.bind(this);
 
         const dummyLink: ILink = {
             timestamp: new Date(),
@@ -80,21 +84,27 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         };
 
         this.state = {
-            isAddModalOpen: false,
+            isLinkModalOpen: false,
+            numberOfLinksSelected: 0,
             LinksSorting: [],
             LinksLoading: true,
             LinksSearch: "",
             ShowLink: undefined,
             LinksSourceData: [
-                dummyLink, dummyLink, dummyLink, dummyLink, dummyLink
+                { ...dummyLink, rowKey: 'dummy1' }, { ...dummyLink, rowKey: 'dummy2' }, { ...dummyLink, rowKey: 'dummy3' }, { ...dummyLink, rowKey: 'dummy4' }, { ...dummyLink, rowKey: 'dummy5' }
             ]
         };
+
+        this._selection = new Selection({
+            onSelectionChanged: () => this.setState({ numberOfLinksSelected: this._selection.getSelectedCount() }),
+        });
+    
+    
     }
 
-    private _selection: ISelection | undefined;
-    private _getKey(item: any/*, index?: number*/): string {
+    private _getKey(item: ILink/* , index?: number*/): string {
         // log.debug(`_getKey() executed with item ${JSON.stringify(item)} and index ${index}`);
-        return item.key;
+        return item.rowKey;
     }
 
     private renderSearchBox() {
@@ -163,8 +173,13 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     linkClick(item: ILink) {
         this.setState({
-            ShowLink: item
+            ShowLink: item,
+            isLinkModalOpen: true
         });
+    }
+
+    linkActive(item?: ILink, index?: number | undefined, ev?: React.FocusEvent<HTMLElement> | undefined) {
+        log.debug(`${JSON.stringify(this._selection)}`)
     }
 
     componentDidMount() {
@@ -198,14 +213,40 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     addButtonClick() {
         this.setState({
-            isAddModalOpen: true
+            isLinkModalOpen: true,
+            ShowLink: undefined
         });
     }
 
     closeAddModalClick() {
         this.setState({
-            isAddModalOpen: false
+            isLinkModalOpen: false
         });
+    }
+
+    deleteLinks() {
+        const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
+        log.debug(`deleteLinks() ${JSON.stringify(items)}`);
+        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as ILink).rowKey}`, this.props.user.accessToken); });
+
+        if (promises.length > 0) {
+            this.performPromiseActions(promises);
+        }
+    }
+
+    restoreLinks() {
+        const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
+        log.debug(`restoreLinks() ${JSON.stringify(items)}`);
+        const promises = items.map(link => { return ApiHelper.patch(`/_api/v1/redirect/${(link as ILink).rowKey}`, { recycled: false }, this.props.user.accessToken); });
+
+        if (promises.length > 0) {
+            this.performPromiseActions(promises);
+        }
+    }
+
+    async performPromiseActions(promises: Promise<void>[]) {
+        await Promise.all(promises);
+        this.initLinks();
     }
 
     applySorting(items: any, sorting: ISortingInformation[]) {
@@ -237,26 +278,44 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     render() {
 
-        const commandBarItems = [
-            {
-                key: "addlink",
-                text: "Add a link",
-                iconProps: { iconName: "AddLink" },
-                onClick: this.addButtonClick
-            },
-            {
-                key: "refresh",
-                text: "Refresh",
-                iconProps: { iconName: "Refresh" },
-                onClick: this.initLinks
-            },
-            {
+        const commandBarItems = [];
+        !this.props.recycled && commandBarItems.push({
+            key: "addlink",
+            text: "Add a link",
+            iconProps: { iconName: "AddLink" },
+            onClick: this.addButtonClick
+        });
+        commandBarItems.push({
+            key: "refresh",
+            text: "Refresh",
+            iconProps: { iconName: "Refresh" },
+            onClick: this.initLinks
+        });
+        this.props.recycled && 
+            commandBarItems.push({
                 key: "deletelink",
-                text: "Delete link",
-                iconProps: { iconName: "Delete" }
-            }
-        ];
-    
+                text: `Delete link`,
+                iconProps: { iconName: "Delete" },
+                disabled: this.state.numberOfLinksSelected === 0,
+                onClick: this.deleteLinks
+            });
+        this.props.recycled && 
+            commandBarItems.push({
+                key: "restoreLink",
+                text: `Restore`,
+                iconProps: { iconName: "Undo" },
+                disabled: this.state.numberOfLinksSelected === 0,
+                onClick: this.restoreLinks
+            });
+        !this.props.recycled && 
+            commandBarItems.push({
+                key: "recycleLink",
+                text: `Recycle`,
+                iconProps: { iconName: "RecycleBin" },
+                disabled: this.state.numberOfLinksSelected === 0,
+                onClick: this.deleteLinks
+            });
+
         const commandBarFarItems = [
             {
                 key: "searchBox",
@@ -306,47 +365,39 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                         items={commandBarItems}
                         farItems={commandBarFarItems} />
 
-                    <DetailsList
-                        items={items}
-                        compact={false}
-                        columns={columns.Columns(
-                            this.linksColumnClick,
-                            this.state.LinksSorting,
-                            this.state.LinksLoading
-                        )}
-                        selectionMode={SelectionMode.multiple}
-                        getKey={this._getKey}
-                        setKey="multiple"
-                        layoutMode={DetailsListLayoutMode.fixedColumns}
-                        isHeaderVisible
-                        selection={this._selection}
-                        selectionPreservedOnEmptyClick
-                        onItemInvoked={this.linkClick}
-                        enterModalSelectionOnTouch
-                        ariaLabelForSelectionColumn="Toggle selection"
-                        ariaLabelForSelectAllCheckbox="Toggle selection for all items"
-                        checkButtonAriaLabel="Row checkbox"
-                    />
-
-                    <Panel
-                        headerText="Link details"
-                        isOpen={this.state.ShowLink !== undefined}
-                        onDismiss={this.dismissLinkPanel}
-                        // You MUST provide this prop! Otherwise screen readers will just say "button" with no label.
-                        closeButtonAriaLabel="Close" >
-                        <Link link={this.state.ShowLink} user={this.props.user} />
-                    </Panel>
+                    <MarqueeSelection selection={this._selection}>
+                        <DetailsList
+                            items={items}
+                            compact={false}
+                            columns={columns.Columns(
+                                this.linksColumnClick,
+                                this.state.LinksSorting,
+                                this.state.LinksLoading
+                            )}
+                            selectionMode={SelectionMode.multiple}
+                            getKey={this._getKey}
+                            setKey="multiple"
+                            layoutMode={DetailsListLayoutMode.fixedColumns}
+                            isHeaderVisible
+                            selection={this._selection}
+                            selectionPreservedOnEmptyClick
+                            onItemInvoked={this.linkClick}
+                            enterModalSelectionOnTouch
+                            ariaLabelForSelectionColumn="Toggle selection"
+                            ariaLabelForSelectAllCheckbox="Toggle selection for all items"
+                            checkButtonAriaLabel="Row checkbox"
+                        />
+                    </MarqueeSelection>
 
                     <Modal
                         titleAriaId={`modalHeader`}
-                        isOpen={this.state.isAddModalOpen}
+                        isOpen={this.state.isLinkModalOpen}
                         onDismiss={this.closeAddModalClick}
                         isBlocking={false}
                         containerClassName={styles.modalContainer}
                         dragOptions={dragOptions}
                     >
                         <div className={styles.modalHeader}>
-                            <h2 id={`modalHeader`}>Add a link</h2>
                             <IconButton
                                 styles={iconButtonStyles}
                                 iconProps={ { iconName: 'Cancel' } }
@@ -355,7 +406,11 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                             />
                         </div>
                         <div className={styles.modalBody}>
-                            <AddLink dismissClick={this.closeAddModalClick} user={this.props.user} refreshCallback={this.initLinks} />
+                            <AddLink 
+                                rowKey={this.state.ShowLink?.rowKey}
+                                dismissClick={this.closeAddModalClick} 
+                                user={this.props.user} 
+                                refreshCallback={this.initLinks} />
                         </div>
                     </Modal>
 

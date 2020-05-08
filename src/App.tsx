@@ -1,10 +1,9 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import { initializeIcons } from "office-ui-fabric-react/lib/Icons";
 import * as Msal from "msal";
 
-import { IS_NODE, API_BASE } from "./config/env";
+import { API_BASE } from "./config/env";
 import routes from "./routes";
 
 import theme from "./assets/styles/theme";
@@ -13,10 +12,12 @@ import { Customizations } from "@uifabric/utilities";
 import { LogFactory } from "./common/utils/InitLogger";
 import Config from "./common/utils/Config";
 import "office-ui-fabric-core/dist/css/fabric.min.css";
+import { Modal } from "office-ui-fabric-react/lib/Modal";
+import { PrimaryButton } from "office-ui-fabric-react/lib/Button";
 
 require("./assets/styles/global.scss");
 
-const styles = require("./assets/styles/app.scss");
+const styles = require("./assets/styles/app.module.scss");
 const log = LogFactory.getLogger("app.tsx");
 
 export const PACKAGE_NAME = "Azure Redirects";
@@ -36,6 +37,7 @@ export interface IUser {
 export interface IAppProps {}
 export interface IAppState {
     userLoggedIn: boolean;
+    loginModalOpen: boolean;
     user: IUser | null;
 }
 
@@ -52,11 +54,13 @@ export default class App extends React.Component<IAppProps, IAppState> {
 
         this.state = {
             userLoggedIn: false,
+            loginModalOpen: false,
             user: null
         };
         
         this.handleLogin = this.handleLogin.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
+        this.hideLoginModal = this.hideLoginModal.bind(this);
 
         this.init().then(() => {
             this.initLogin();
@@ -87,6 +91,12 @@ export default class App extends React.Component<IAppProps, IAppState> {
         };
 
         this.msalInstance = new Msal.UserAgentApplication(this.msalConfig);
+
+        if (!!!this.msalInstance.getAccount()) {
+            this.setState({
+                loginModalOpen: true
+            });
+        }
 
     }
 
@@ -137,7 +147,8 @@ export default class App extends React.Component<IAppProps, IAppState> {
                             loginName: this.msalInstance.getAccount().userName, 
                             displayName: this.msalInstance.getAccount().name,
                             accessToken: tokenResponse.accessToken
-                        }
+                        },
+                        loginModalOpen: false
                     });
                 }
             
@@ -152,6 +163,12 @@ export default class App extends React.Component<IAppProps, IAppState> {
             this.msalInstance.logout();
 
         }
+    }
+
+    public hideLoginModal() {
+        this.setState({
+            loginModalOpen: false
+        })
     }
 
     render() {
@@ -173,8 +190,6 @@ export default class App extends React.Component<IAppProps, IAppState> {
                 />
             );
         };
-
-        const location: any = [];
 
         return (
             <>
@@ -199,6 +214,17 @@ export default class App extends React.Component<IAppProps, IAppState> {
                         </Switch>
                     </BrowserRouter>
                 </div>
+                <Modal
+                    isOpen={this.state.loginModalOpen}
+                    onDismiss={this.hideLoginModal}
+                    isBlocking={true}>
+                        <div className={styles.loginModalContainer}>
+                            <h1>Sign in to {PACKAGE_NAME}</h1>
+                            <p>To use this service you must first sign in</p>
+                            <PrimaryButton text={`Sign in`} onClick={this.handleLogin} />
+                        </div>
+                </Modal>
+
             </>
         );
     }

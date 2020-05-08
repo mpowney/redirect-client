@@ -10,10 +10,6 @@ interface IRecycledLinksState {}
 
 export default class HomeEntry extends React.Component<IRecycledLinksProps, IRecycledLinksState> {
 
-    constructor(props: IRecycledLinksProps) {
-        super(props);
-    }
-
     render() {
         return (
             <>

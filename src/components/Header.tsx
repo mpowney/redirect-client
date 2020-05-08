@@ -15,11 +15,6 @@ interface IHeaderState {
 export class Header extends React.Component<IHeaderProps, IHeaderState> {
     static STORE_CLASSES = [];
 
-    constructor(props: IHeaderProps) {
-        super(props);
-
-    }
-
     render() {
         log.debug(`render() executing`);
 

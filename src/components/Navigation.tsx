@@ -1,5 +1,4 @@
 import * as React from "react";
-import { withRouter, useHistory } from "react-router-dom";
 
 import { Nav, INavLink } from "office-ui-fabric-react/lib/Nav";
 import { LogFactory } from "../common/utils/InitLogger";
@@ -18,12 +17,13 @@ export class Navigation extends React.Component<INavigationProps, INavigationSta
 
     private itemClick(ev?: React.MouseEvent<HTMLElement, MouseEvent>, item?: INavLink): void {
         const log = LogFactory.getLogger("Navigation.tsx");
-        let history = useHistory();
-        
+
         log.debug(`itemClick() executed with event ${ev && ev.target}`);
 
-        if (item) { item.url && history.push(item.url); }
-        if (ev) { ev.preventDefault(); }
+        // if (item) { item.url && this.props.history.push(item.url); }
+        // if (ev) { 
+        //     ev.preventDefault(); 
+        // }
     }
 
     render() {
