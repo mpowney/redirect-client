@@ -7,7 +7,7 @@ exports.IS_PROD = true; // process.env.NODE_ENV === "production";
 exports.PUBLIC_ASSETS_URL = exports.IS_PROD ? "/assets/" : "/assets/";
 
 exports.API_BASE = exports.IS_PROD
-    ? window.location.hostname == "redirectapiaustraliase.z26.web.core.windows.net" || window.location.hostname == 
+    ? window.location.hostname == "redirectapiaustraliase.z26.web.core.windows.net" || window.location.hostname == "admin.pown.ee"
         ? "https://redirect-api-australiasoutheast" : "https://redirect-api-ause.azurewebsites.net"
     : "http://localhost:7071";
 
