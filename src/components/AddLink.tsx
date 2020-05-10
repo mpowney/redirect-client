@@ -3,7 +3,6 @@ import * as React from "react";
 import { LogFactory } from "../common/utils/InitLogger";
 import { TextField } from "office-ui-fabric-react/lib/TextField";
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
-import { Spinner, SpinnerSize } from "office-ui-fabric-react/lib/Spinner";
 
 import copy from 'copy-to-clipboard';
 import Config from "../common/utils/Config";
@@ -200,9 +199,9 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         return (
             <div className={styles.addLink}>
             
-                <h2 id={`modalHeader`}>{!this.state.isLoading && this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
-                <TextField value={this.state.redirectTo} label={`Redirect to`} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } />
-                <TextField value={this.state.shortName} label={`Short name`} disabled={this.state.editMode} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
+                <h2 id={`modalHeader`}>{this.state.isLoading ? `Loading...` : this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
+                <TextField value={this.state.redirectTo} label={`Redirect to`} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } />
+                <TextField value={this.state.shortName} label={`Short name`} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
 
                 <div className={styles.buttonContainer}>
                     { this.state.editMode ? 
@@ -212,7 +211,6 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
                     }
                     <DefaultButton text={`Cancel`} onClick={this.cancelClick} className={styles.cancelButton} />
                     {this.state.hasGenerated && <DefaultButton text={`Copy`} onClick={this.copyClick} /> }
-                    { this.state.isLoading && <Spinner size={SpinnerSize.small} />}
                 </div>
             </div>
         );

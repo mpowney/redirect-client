@@ -38,6 +38,7 @@ export interface IAppProps {}
 export interface IAppState {
     userLoggedIn: boolean;
     loginModalOpen: boolean;
+    loginModalRecover: boolean;
     user: IUser | null;
 }
 
@@ -55,6 +56,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
         this.state = {
             userLoggedIn: false,
             loginModalOpen: false,
+            loginModalRecover: false,
             user: null
         };
         
@@ -116,7 +118,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
             });
     
             try {
-                if (this.msalInstance.getAccount() == null) {
+                if (this.msalInstance.getAccount() == null || this.state.loginModalRecover) {
                     const loginResponse = await this.msalInstance.loginPopup(this.msalLoginRequest);
                     log.debug(`loginResponse: ${JSON.stringify(loginResponse)}`);
                 }
@@ -137,21 +139,29 @@ export default class App extends React.Component<IAppProps, IAppState> {
 
             if (this.msalInstance.getAccount() != null) {
 
-                const tokenResponse = await this.msalInstance.acquireTokenSilent(this.msalLoginRequest);
-                log.debug(`Access token: ${tokenResponse.accessToken}`);
+                try {
+                    const tokenResponse = await this.msalInstance.acquireTokenSilent(this.msalLoginRequest);
+                    log.debug(`Access token: ${tokenResponse.accessToken}`);
 
-                if (tokenResponse.accessToken !== null) {
+                    if (tokenResponse.accessToken !== null) {
+                        this.setState({
+                            userLoggedIn: true,
+                            user: { 
+                                loginName: this.msalInstance.getAccount().userName, 
+                                displayName: this.msalInstance.getAccount().name,
+                                accessToken: tokenResponse.accessToken
+                            },
+                            loginModalOpen: false,
+                            loginModalRecover: false
+                        });
+                    }
+                }
+                catch (err) {
+                    log.error(`Error occurred during initLogin(): ${err}`);
                     this.setState({
-                        userLoggedIn: true,
-                        user: { 
-                            loginName: this.msalInstance.getAccount().userName, 
-                            displayName: this.msalInstance.getAccount().name,
-                            accessToken: tokenResponse.accessToken
-                        },
-                        loginModalOpen: false
+                        loginModalRecover: true
                     });
                 }
-            
             }
         }
 
@@ -167,7 +177,8 @@ export default class App extends React.Component<IAppProps, IAppState> {
 
     public hideLoginModal() {
         this.setState({
-            loginModalOpen: false
+            loginModalOpen: false,
+            loginModalRecover: false
         })
     }
 
@@ -215,7 +226,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
                     </BrowserRouter>
                 </div>
                 <Modal
-                    isOpen={this.state.loginModalOpen}
+                    isOpen={this.state.loginModalOpen || this.state.loginModalRecover}
                     onDismiss={this.hideLoginModal}
                     isBlocking={true}>
                         <div className={styles.loginModalContainer}>
