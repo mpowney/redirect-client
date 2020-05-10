@@ -36,5 +36,23 @@ export default class ApiHelper {
 
     }
 
+    public static async delete(api: string, accessToken?: string): Promise<any> {
+
+        log.info(`Calling API ${api}${accessToken && ` with bearer token`}`);
+
+        const config = accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {};
+        await axios.delete(`${API_BASE}${api}`, config);
+        return true;
+
+    }
+
+    // public static async executeWithAuth(promise: Promise<any>): Promise< any> {
+    //     return promise.catch(err => {
+    //         if (err.status === 401) {
+
+    //         }
+    //     });
+    // }
+
 
 }

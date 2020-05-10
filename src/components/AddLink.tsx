@@ -3,28 +3,31 @@ import * as React from "react";
 import { LogFactory } from "../common/utils/InitLogger";
 import { TextField } from "office-ui-fabric-react/lib/TextField";
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
-import { Spinner, SpinnerSize } from "office-ui-fabric-react/lib/Spinner";
 
 import copy from 'copy-to-clipboard';
 import Config from "../common/utils/Config";
 import ApiHelper from "../common/utils/ApiHelper";
 import { IUser } from "../App";
+import { ILink } from "../entries/Links";
 
-const styles = require("../assets/styles/components/AddLink.less");
+const styles = require("../assets/styles/components/AddLink.module.scss");
 const log = LogFactory.getLogger("AddLink.tsx");
 
 interface IAddLinkProps {
     user: IUser;
     dismissClick: any;
     refreshCallback: any;
+    rowKey?: string;
 }
 interface IAddLinkState {
+    link?: ILink;
     shortPrefix: string | null;
     redirectTo: string;
     shortName: string;
     hasGenerated: boolean;
     generateError: boolean;
     isLoading: boolean;
+    editMode: boolean;
 }
 
 export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
@@ -38,11 +41,14 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
             shortName: '',
             hasGenerated: false,
             generateError: false,
-            isLoading: false
+            isLoading: false,
+            editMode: false
         }
 
         this.generateClick = this.generateClick.bind(this);
         this.cancelClick = this.cancelClick.bind(this);
+        this.saveClick = this.saveClick.bind(this);
+        this.copyClick = this.copyClick.bind(this);
 
     }
 
@@ -56,6 +62,20 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         this.setState({
             shortPrefix: shortUrlPrefix
         });
+        if (this.props.rowKey) {
+            this.setState({
+                isLoading: true
+            });
+            const response = await ApiHelper.get(`/_api/v1/redirect/${this.props.rowKey}`, this.props.user.accessToken);
+            log.debug(`init() response from api get ${JSON.stringify(response)}`)
+            this.setState({
+                redirectTo: response.redirectTo,
+                shortName: response.rowKey,
+                hasGenerated: true,
+                editMode: true,
+                isLoading: false
+            });
+        }
         
     }
 
@@ -137,10 +157,23 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         
     }
 
+    async saveClick() {
+
+        await ApiHelper.patch(`/_api/v1/redirect/${this.state.shortName}`, {
+            redirectTo: this.state.redirectTo
+        }, this.props.user.accessToken);
+        this.setState({
+            hasGenerated: true
+        });
+        await this.props.refreshCallback();
+        this.props.dismissClick();
+
+    }
+
     copyClick() {
         log.info(`copyClick() executing`);
         if ( this.state.shortName ) {
-            copy(this.state.shortName);
+            copy(`${this.state.shortPrefix}${this.state.shortName}`);
         }
     }
 
@@ -165,13 +198,19 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
 
         return (
             <div className={styles.addLink}>
-                <TextField defaultValue={this.state.redirectTo} label={`Redirect to`} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } />
-                <TextField value={this.state.shortName} label={`Short name`} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } iconProps={{ iconName: 'Copy', onClick: this.copyClick }} />
+            
+                <h2 id={`modalHeader`}>{this.state.isLoading ? `Loading...` : this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
+                <TextField value={this.state.redirectTo} label={`Redirect to`} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } />
+                <TextField value={this.state.shortName} label={`Short name`} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
 
                 <div className={styles.buttonContainer}>
-                    <PrimaryButton text={this.state.hasGenerated ? `Close` : `Generate`} onClick={this.generateClick} className={styles.generateButton} disabled={!generateButtonActive} />
-                    <DefaultButton text={`Cancel`} onClick={this.cancelClick} />
-                    { this.state.isLoading && <Spinner size={SpinnerSize.small} />}
+                    { this.state.editMode ? 
+                        <PrimaryButton text={`Save`} onClick={this.saveClick} className={styles.generateButton} disabled={!generateButtonActive} />
+                        :
+                        <PrimaryButton text={this.state.hasGenerated ? `Close` : `Generate`} onClick={this.generateClick} className={styles.generateButton} disabled={!generateButtonActive} />
+                    }
+                    <DefaultButton text={`Cancel`} onClick={this.cancelClick} className={styles.cancelButton} />
+                    {this.state.hasGenerated && <DefaultButton text={`Copy`} onClick={this.copyClick} /> }
                 </div>
             </div>
         );

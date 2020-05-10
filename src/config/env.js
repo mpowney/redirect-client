@@ -1,5 +1,5 @@
 exports.IS_NODE =
-    typeof global !== "undefined" && new Object().toString.call(global) === "[object global]";
+    typeof global !== "undefined" && {}.toString.call(global) === "[object global]";
 
 exports.IS_PROD = true; // process.env.NODE_ENV === "production";
 

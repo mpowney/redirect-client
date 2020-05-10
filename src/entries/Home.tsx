@@ -1,8 +1,9 @@
 import * as React from "react";
+
 import DocumentMeta from "react-document-meta";
 import Navigation from "../components/Navigation";
 
-const styles = require("../assets/styles/entries/Home.less");
+const styles = require("../assets/styles/entries/Home.module.scss");
 const meta = {
     title: "Home",
     description: "",
@@ -19,10 +20,6 @@ interface HomeState {}
 
 export default class HomeEntry extends React.Component<HomeProps, HomeState> {
     static STORE_CLASSES = [];
-
-    constructor(props: HomeProps) {
-        super(props);
-    }
 
     render() {
         return (

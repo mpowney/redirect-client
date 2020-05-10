@@ -2,7 +2,7 @@ import * as React from "react";
 import { LogFactory } from "../common/utils/InitLogger";
 import { PACKAGE_NAME } from "../App";
 
-const styles = require("../assets/styles/components/Header.less");
+const styles = require("../assets/styles/components/Header.module.scss");
 const log = LogFactory.getLogger("Header.tsx");
 
 interface IHeaderProps {
@@ -14,11 +14,6 @@ interface IHeaderState {
 
 export class Header extends React.Component<IHeaderProps, IHeaderState> {
     static STORE_CLASSES = [];
-
-    constructor(props: IHeaderProps) {
-        super(props);
-
-    }
 
     render() {
         log.debug(`render() executing`);

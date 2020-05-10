@@ -21,10 +21,10 @@ export default class Config {
 
         // Temporary implementation until a config store is developed
         switch (setting.toLowerCase()) {
-            case 'aad tenant name': return `${TENANT_NAME}`; break;
-            case 'aad tenant id': return `${TENANT_ID}`; break;
-            case 'aad application client id': return `${CLIENT_ID}`; break;
-            case 'short url prefix': return `${SHORT_URL_PREFIX}`; break;
+            case 'aad tenant name': return `${TENANT_NAME}`;
+            case 'aad tenant id': return `${TENANT_ID}`;
+            case 'aad application client id': return `${CLIENT_ID}`;
+            case 'short url prefix': return `${SHORT_URL_PREFIX}`;
         }
 
         return null;
