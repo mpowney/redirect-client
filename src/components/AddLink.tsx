@@ -32,8 +32,12 @@ interface IAddLinkState {
 
 export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
 
+    private urlRef: any;
+
     constructor(props: IAddLinkProps) {
         super(props);
+
+        this.urlRef = React.createRef();
 
         this.state = {
             shortPrefix: null,
@@ -54,6 +58,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
 
     componentDidMount() {
         this.init();
+        this.urlRef.current.focus();
     }
 
     async init() {
@@ -195,12 +200,11 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
     render() {
 
         const generateButtonActive = this.isValidURL(this.state.redirectTo);
-
         return (
             <div className={styles.addLink}>
             
                 <h2 id={`modalHeader`}>{this.state.isLoading ? `Loading...` : this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
-                <TextField value={this.state.redirectTo} label={`Redirect to`} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } />
+                <TextField value={this.state.redirectTo} label={`Redirect to`} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } componentRef={this.urlRef} />
                 <TextField value={this.state.shortName} label={`Short name`} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
 
                 <div className={styles.buttonContainer}>
