@@ -4,8 +4,6 @@ import { LogFactory } from "../common/utils/InitLogger";
 import { TextField } from "office-ui-fabric-react/lib/TextField";
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
 
-import copy from 'copy-to-clipboard';
-import Config from "../common/utils/Config";
 import ApiHelper from "../common/utils/ApiHelper";
 import { IUser } from "../App";
 import { IDomain } from "../entries/Domains";

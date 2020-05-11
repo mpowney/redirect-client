@@ -25,6 +25,7 @@
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
+    "react-shortcut": "^2.0.9",
     "typescript": "~3.7.2",
     "typescript-logging": "^0.6.4"
   },

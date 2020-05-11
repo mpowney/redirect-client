@@ -32,6 +32,7 @@ export interface IUser {
     loginName: string;
     displayName: string;
     accessToken: string;
+    accessTokenExpires: Date;
 }
 
 export interface IAppProps {}
@@ -63,6 +64,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
         this.handleLogin = this.handleLogin.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
         this.hideLoginModal = this.hideLoginModal.bind(this);
+        this.renewAccessToken = this.renewAccessToken.bind(this);
 
         this.init().then(() => {
             this.initLogin();
@@ -141,7 +143,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
 
                 try {
                     const tokenResponse = await this.msalInstance.acquireTokenSilent(this.msalLoginRequest);
-                    log.debug(`Access token: ${tokenResponse.accessToken}`);
+                    log.debug(`Response from AAD: ${JSON.stringify(tokenResponse)}`);
 
                     if (tokenResponse.accessToken !== null) {
                         this.setState({
@@ -149,7 +151,8 @@ export default class App extends React.Component<IAppProps, IAppState> {
                             user: { 
                                 loginName: this.msalInstance.getAccount().userName, 
                                 displayName: this.msalInstance.getAccount().name,
-                                accessToken: tokenResponse.accessToken
+                                accessToken: tokenResponse.accessToken,
+                                accessTokenExpires: new Date(tokenResponse.expiresOn)
                             },
                             loginModalOpen: false,
                             loginModalRecover: false
@@ -164,7 +167,10 @@ export default class App extends React.Component<IAppProps, IAppState> {
                 }
             }
         }
+    }
 
+    public renewAccessToken() {
+        this.initLogin();
     }
 
     public async handleLogout() {
@@ -201,6 +207,13 @@ export default class App extends React.Component<IAppProps, IAppState> {
                 />
             );
         };
+
+        const { DateTime } = require("luxon");
+        if (this.state.user && this.state.user.accessTokenExpires) {
+            const diffDuration = DateTime.fromJSDate(this.state.user.accessTokenExpires).diff(DateTime.local(), "seconds");
+            log.debug(`render() accessTokenExpires diff ${JSON.stringify(diffDuration.seconds)}`);
+            window.setTimeout(this.renewAccessToken, diffDuration.seconds * 1000);
+        }
 
         return (
             <>

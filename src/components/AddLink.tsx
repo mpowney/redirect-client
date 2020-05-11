@@ -5,6 +5,7 @@ import { TextField } from "office-ui-fabric-react/lib/TextField";
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
 
 import copy from 'copy-to-clipboard';
+
 import Config from "../common/utils/Config";
 import ApiHelper from "../common/utils/ApiHelper";
 import { IUser } from "../App";
@@ -53,6 +54,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         this.cancelClick = this.cancelClick.bind(this);
         this.saveClick = this.saveClick.bind(this);
         this.copyClick = this.copyClick.bind(this);
+        this.checkForEnterKey = this.checkForEnterKey.bind(this);
 
     }
 
@@ -96,6 +98,10 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
     async generateClick() {
 
         log.info(`generateClick() executing`);
+
+        if (!this.isValidURL(this.state.redirectTo)) {
+            return;    
+        }
 
         if (this.state.hasGenerated) {
             this.props.dismissClick();
@@ -175,6 +181,12 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
 
     }
 
+    checkForEnterKey(ev: any) {
+        if (ev.keyCode === 13) {
+            this.generateClick();
+        }
+    }
+
     copyClick() {
         log.info(`copyClick() executing`);
         if ( this.state.shortName ) {
@@ -204,8 +216,8 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
             <div className={styles.addLink}>
             
                 <h2 id={`modalHeader`}>{this.state.isLoading ? `Loading...` : this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
-                <TextField value={this.state.redirectTo} label={`Redirect to`} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } componentRef={this.urlRef} />
-                <TextField value={this.state.shortName} label={`Short name`} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
+                <TextField value={this.state.redirectTo} label={`Redirect to`} onKeyUp={this.checkForEnterKey} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } componentRef={this.urlRef} />
+                <TextField value={this.state.shortName} label={`Short name`} onKeyUp={this.checkForEnterKey} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
 
                 <div className={styles.buttonContainer}>
                     { this.state.editMode ? 
