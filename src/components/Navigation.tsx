@@ -44,6 +44,12 @@ export class Navigation extends React.Component<INavigationProps, INavigationSta
                                 { key: "ManageLinks", name: "Manage links", url: "/links" },
                                 { key: "RecycledLinks", name: "Recycle bin", url: "/links/recycled" }
                             ]
+                        },
+                        {
+                            links: [
+                                { key: "Domains", name: "Domains", url: "/domains", icon: "World" },
+                                { key: "ManageDomains", name: "Manage Domains", url: "/domains" },
+                            ]
                         }
                     ]}
                 />

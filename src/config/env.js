@@ -5,7 +5,7 @@ exports.IS_PROD = window.location.hostname === "redirectapiaustraliase.z26.web.c
 
 // CDN or Local assets url
 exports.PUBLIC_ASSETS_URL = exports.IS_PROD ? "/assets/" : "/assets/";
-exports.API_BASE = exports.IS_PROD ? "https://redirect-api-australiasoutheast.azurewebsites.net" : "https://redirect-api-ause.azurewebsites.net";
+exports.API_BASE = exports.IS_PROD ? "https://redirect-api-australiasoutheast.azurewebsites.net" : "https://redirect-api-australiasoutheast.azurewebsites.net";
 exports.DEV_HOST = "localhost";
 
 exports.DEV_PORT = 7000;

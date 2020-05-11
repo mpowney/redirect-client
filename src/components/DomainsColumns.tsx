@@ -1,26 +1,27 @@
 import * as React from "react";
 import { IColumn } from "office-ui-fabric-react/lib/DetailsList";
 import { Shimmer } from "office-ui-fabric-react/lib/Shimmer";
+import { Icon } from "office-ui-fabric-react/lib/Icon";
 
 import ISortingInformation from "../common/utils/ISortingInformation";
-import { ILink } from "../entries/Links"
+import { IDomain } from "../entries/Domains"
 
-export default class LinksColumns {
+const styles = require("../assets/styles/components/DomainColumns.module.scss");
+
+export default class DomainsColumns {
     public Columns(
         onColumnClick: any,
         sorting: ISortingInformation[],
         isLoading: boolean
     ): IColumn[] {
 
-        const { DateTime } = require("luxon");
-
         let columns = [
             {
                 key: `rowKey`,
-                name: "Short name",
+                name: "Domain",
                 fieldName: "rowKey",
-                minWidth: 40,
-                maxWidth: 100,
+                minWidth: 100,
+                maxWidth: 200,
                 isRowHeader: true,
                 isResizable: true,
                 sortAscendingAriaLabel: "Sorted A to Z",
@@ -29,7 +30,7 @@ export default class LinksColumns {
                 onColumnClick: (event: any, column: any) => {
                     onColumnClick(event, column);
                 },
-                onRender: (item: ILink) => {
+                onRender: (item: IDomain) => {
                     return isLoading ? (
                         <Shimmer width={`${60 + Math.floor(Math.random() * 20)}%`} />
                     ) : (
@@ -39,11 +40,12 @@ export default class LinksColumns {
                 isPadded: true
             },
             {
-                key: `redirectTo`,
-                name: "Redirect to",
-                fieldName: "redirectTo",
-                minWidth: 100,
-                maxWidth: 240,
+                key: `configuration`,
+                name: "Configuration",
+                fieldName: "configured",
+                minWidth: 60,
+                maxWidth: 100,
+                isRowHeader: true,
                 isResizable: true,
                 sortAscendingAriaLabel: "Sorted A to Z",
                 sortDescendingAriaLabel: "Sorted Z to A",
@@ -51,31 +53,19 @@ export default class LinksColumns {
                 onColumnClick: (event: any, column: any) => {
                     onColumnClick(event, column);
                 },
-                onRender: (item: ILink) => {
-                    return isLoading ? (
-                        <Shimmer width={`${50 + Math.floor(Math.random() * 10)}%`} />
-                    ) : (
-                        <>{item.redirectTo}</>
-                    );
-                },
-                isPadded: true
-            },
-            {
-                key: `created`,
-                name: "Date created",
-                fieldName: "created",
-                minWidth: 80,
-                maxWidth: 140,
-                isResizable: true,
-                sortAscendingAriaLabel: "Sorted earliest to latest",
-                sortDescendingAriaLabel: "Sorted latest to earliest",
-                isCollapsible: true,
-                data: "string",
-                onColumnClick: (event: any, column: any) => {
-                    onColumnClick(event, column);
-                },
-                onRender: (item: ILink) => {
-                    return isLoading ? <Shimmer width={`${70 + Math.floor(Math.random() * 10)}%`} /> : <>{DateTime.fromISO(item.created).toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}</>;
+                onRender: (item: IDomain) => {
+                    return !isLoading && (<>
+                        {item.configured ? 
+                            <Icon iconName={`CompletedSolid`} className={`${styles.configIcon} ${styles.configComplete}`} />
+                        :
+                            <Icon iconName={'WarningSolid'} className={`${styles.configIcon} ${styles.configIncomplete}`} />
+                        }
+                        {item.sslConfigured ? 
+                            <Icon iconName={`LockSolid`} className={`${styles.configIcon} ${styles.configComplete}`} />
+                        :
+                            <Icon iconName={'Unlock'} className={`${styles.configIcon} ${styles.noSSL}`} />
+                        }
+                    </>);
                 },
                 isPadded: true
             }
