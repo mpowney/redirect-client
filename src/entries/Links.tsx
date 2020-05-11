@@ -193,12 +193,18 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         if (this.props.user) {
 
             log.debug(`User logged in, calling API`);
-            const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, this.props.user.accessToken);
-            this.setState({
-                LinksLoading: false,
-                LinksSourceData: sourceLinks
-            });
+            try {
 
+                const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, this.props.user.accessToken);
+                this.setState({
+                    LinksLoading: false,
+                    LinksSourceData: sourceLinks
+                });
+    
+            }
+            catch (err) {
+                log.error(`${JSON.stringify(err)}`);
+            }
         }
         else {
 
