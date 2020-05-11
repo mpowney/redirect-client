@@ -46,6 +46,7 @@ export interface IAppState {
 // Browser App entry
 export default class App extends React.Component<IAppProps, IAppState> {
 
+    private accessTokenTimeout: number = 0;
     private msalConfig: any;
     private msalLoginRequest: any;
     private msalInstance: Msal.UserAgentApplication | undefined = undefined;
@@ -212,7 +213,8 @@ export default class App extends React.Component<IAppProps, IAppState> {
         if (this.state.user && this.state.user.accessTokenExpires) {
             const diffDuration = DateTime.fromJSDate(this.state.user.accessTokenExpires).diff(DateTime.local(), "seconds");
             log.debug(`render() accessTokenExpires diff ${JSON.stringify(diffDuration.seconds)}`);
-            window.setTimeout(this.renewAccessToken, diffDuration.seconds * 1000);
+            window.clearTimeout(this.accessTokenTimeout);
+            this.accessTokenTimeout = window.setTimeout(this.renewAccessToken, diffDuration.seconds * 1000);
         }
 
         return (
