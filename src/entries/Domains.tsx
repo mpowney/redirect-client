@@ -1,7 +1,7 @@
 import * as React from "react";
 import DocumentMeta from "react-document-meta";
 
-import { CommandBar } from "office-ui-fabric-react/lib/CommandBar";
+import { CommandBar, ICommandBarItemProps } from "office-ui-fabric-react/lib/CommandBar";
 import { SearchBox } from "office-ui-fabric-react/lib/SearchBox";
 import { Modal, IDragOptions } from "office-ui-fabric-react/lib/Modal";
 
@@ -68,6 +68,7 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
         this.linkClick = this.linkClick.bind(this);
         this.linkActive = this.linkActive.bind(this);
         this.closeAddModalClick = this.closeAddModalClick.bind(this);
+        this.refreshButtonClick = this.refreshButtonClick.bind(this);
         this.addButtonClick = this.addButtonClick.bind(this);
         this.initDomains = this.initDomains.bind(this);
         this.deleteDomains = this.deleteDomains.bind(this);
@@ -219,6 +220,10 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
 
     };
 
+    refreshButtonClick() {
+        this.initDomains();
+    }
+
     addButtonClick() {
         this.setState({
             isDomainModalOpen: true,
@@ -276,7 +281,7 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
 
     render() {
 
-        const commandBarItems = [];
+        const commandBarItems: ICommandBarItemProps[] = [];
         commandBarItems.push({
             key: "adddomain",
             text: "Add a domain",
@@ -287,7 +292,7 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
             key: "refresh",
             text: "Refresh",
             iconProps: { iconName: "Refresh" },
-            onClick: this.initDomains
+            onClick: this.refreshButtonClick
         });
         commandBarItems.push({
             key: "deletedomain",
@@ -297,17 +302,17 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
             onClick: this.deleteDomains
         });
 
-        const commandBarFarItems = [
-            {
-                key: "searchBox",
-                onRender: this.renderSearchBox.bind(this)
-            },
-            {
-                key: "filter",
-                text: "Filter",
-                iconProps: { iconName: "Filter" }
-            }
-        ];
+        const commandBarFarItems: ICommandBarItemProps[] = [];
+        //     {
+        //         key: "searchBox",
+        //         onRender: this.renderSearchBox.bind(this)
+        //     },
+        //     {
+        //         key: "filter",
+        //         text: "Filter",
+        //         iconProps: { iconName: "Filter" }
+        //     }
+        // ];
 
         const dragOptions: IDragOptions = {
             moveMenuItemText: 'Move',
