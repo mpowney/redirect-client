@@ -8,7 +8,7 @@ import { Modal, IDragOptions } from "office-ui-fabric-react/lib/Modal";
 import Navigation from "../components/Navigation";
 import Header from "../components/Header";
 import { LogFactory } from "../common/utils/InitLogger";
-import LinksColumns from "../components/LinksColumns";
+import DomainsColumns from "../components/DomainsColumns";
 import ISortingInformation from "../common/utils/ISortingInformation";
 import { IColumn, SelectionMode, DetailsListLayoutMode, DetailsList, Selection } from "office-ui-fabric-react/lib/DetailsList";
 import { IUser } from "../App";
@@ -16,93 +16,91 @@ import ApiHelper from "../common/utils/ApiHelper";
 import { IconButton } from "office-ui-fabric-react/lib/Button";
 import { ContextualMenu } from "office-ui-fabric-react/lib/ContextualMenu";
 import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
-import { AddLink } from "../components/AddLink";
+import { AddDomain } from "../components/AddDomain";
 
-const log = LogFactory.getLogger("Links.tsx");
-const styles = require("../assets/styles/entries/Links.module.scss");
+const log = LogFactory.getLogger("Domains.tsx");
+const styles = require("../assets/styles/entries/Domains.module.scss");
 const meta = {
-    title: "Links",
+    title: "Domains",
     description: "",
     meta: {
         charset: "utf-8",
         name: {
-            keywords: "Links"
+            keywords: "Domains"
         }
     }
 };
 
-export interface ILink {
+export interface IDomain {
     timestamp: Date;
     partitionKey: string;
     rowKey: string;
-    redirectTo: string;
-    clickCount?: number;
-    geoCount?: any;
-    created: Date;
+    account: string;
+    configured: boolean;
+    sslConfigured: boolean;
 }
 
-interface ILinksProps {
+interface IDomainsProps {
     user: IUser;
-    recycled: boolean;
 }
-interface ILinksPersistedState {
-    LinksSorting: ISortingInformation[];
-    LinksSearch: string;
+interface IDomainsPersistedState {
+    DomainsSorting: ISortingInformation[];
+    DomainsSearch: string;
 }
-interface ILinksState extends ILinksPersistedState {
-    LinksLoading: boolean;
-    ShowLink?: ILink;
-    LinksSourceData: ILink[];
-    LinksSearchData?: ILink[];
-    isLinkModalOpen: boolean;
-    numberOfLinksSelected: number;
+interface IDomainsState extends IDomainsPersistedState {
+    DomainsLoading: boolean;
+    ShowDomain?: IDomain;
+    DomainsSourceData: IDomain[];
+    DomainsSearchData?: IDomain[];
+    isDomainModalOpen: boolean;
+    numberOfDomainsSelected: number;
 }
 
-export default class LinksEntry extends React.Component<ILinksProps, ILinksState> {
+export default class DomainsEntry extends React.Component<IDomainsProps, IDomainsState> {
     static STORE_CLASSES = [];
     private _selection: Selection;
     
-    constructor(props: ILinksProps) {
+    constructor(props: IDomainsProps) {
         super(props);
 
-        this.linksColumnClick = this.linksColumnClick.bind(this);
-        this.dismissLinkPanel = this.dismissLinkPanel.bind(this);
+        this.domainsColumnClick = this.domainsColumnClick.bind(this);
+        this.dismissDomainPanel = this.dismissDomainPanel.bind(this);
         this.linkClick = this.linkClick.bind(this);
         this.linkActive = this.linkActive.bind(this);
         this.closeAddModalClick = this.closeAddModalClick.bind(this);
         this.addButtonClick = this.addButtonClick.bind(this);
-        this.initLinks = this.initLinks.bind(this);
-        this.deleteLinks = this.deleteLinks.bind(this);
-        this.restoreLinks = this.restoreLinks.bind(this);
+        this.initDomains = this.initDomains.bind(this);
+        this.deleteDomains = this.deleteDomains.bind(this);
 
-        const dummyLink: ILink = {
+        const dummyDomain: IDomain = {
             timestamp: new Date(),
-            partitionKey: "dummy",
+            partitionKey: "",
             rowKey: "dummy",
-            redirectTo: "dummy",
-            created: new Date()
+            account: "dummy",
+            configured: false,
+            sslConfigured: false
         };
 
         this.state = {
-            isLinkModalOpen: false,
-            numberOfLinksSelected: 0,
-            LinksSorting: [],
-            LinksLoading: true,
-            LinksSearch: "",
-            ShowLink: undefined,
-            LinksSourceData: [
-                { ...dummyLink, rowKey: 'dummy1' }, { ...dummyLink, rowKey: 'dummy2' }, { ...dummyLink, rowKey: 'dummy3' }, { ...dummyLink, rowKey: 'dummy4' }, { ...dummyLink, rowKey: 'dummy5' }
+            isDomainModalOpen: false,
+            numberOfDomainsSelected: 0,
+            DomainsSorting: [],
+            DomainsLoading: true,
+            DomainsSearch: "",
+            ShowDomain: undefined,
+            DomainsSourceData: [
+                { ...dummyDomain, rowKey: 'dummy1' }, { ...dummyDomain, rowKey: 'dummy2' }, { ...dummyDomain, rowKey: 'dummy3' }, { ...dummyDomain, rowKey: 'dummy4' }, { ...dummyDomain, rowKey: 'dummy5' }
             ]
         };
 
         this._selection = new Selection({
-            onSelectionChanged: () => this.setState({ numberOfLinksSelected: this._selection.getSelectedCount() }),
+            onSelectionChanged: () => this.setState({ numberOfDomainsSelected: this._selection.getSelectedCount() }),
         });
     
     
     }
 
-    private _getKey(item: ILink/* , index?: number*/): string {
+    private _getKey(item: IDomain/* , index?: number*/): string {
         // log.debug(`_getKey() executed with item ${JSON.stringify(item)} and index ${index}`);
         return item.rowKey;
     }
@@ -118,17 +116,17 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
           />);
     }
 
-    private linksColumnClick = (
+    private domainsColumnClick = (
         ev: React.MouseEvent<HTMLElement>,
         column: IColumn
     ): void => {
         log.debug(
-            `linksColumnClick() executed with column ${JSON.stringify(
+            `domainsColumnClick() executed with column ${JSON.stringify(
                 column
             )}, event target ${JSON.stringify(ev.pageY)}`
         );
 
-        const currentSorting: ISortingInformation[] = this.state.LinksSorting;
+        const currentSorting: ISortingInformation[] = this.state.DomainsSorting;
         let newSorting: (ISortingInformation | undefined)[] = [];
         if (
             currentSorting.filter(currentSort => {
@@ -159,54 +157,54 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         }
 
         this.setState({
-            LinksSorting: newSorting.filter(sort => {
+            DomainsSorting: newSorting.filter(sort => {
                 return sort !== undefined;
             }) as ISortingInformation[]
         });
     };
 
-    dismissLinkPanel() {
+    dismissDomainPanel() {
         this.setState({
-            ShowLink: undefined
+            ShowDomain: undefined
         });
     }
 
-    linkClick(item: ILink) {
+    linkClick(item: IDomain) {
         this.setState({
-            ShowLink: item,
-            isLinkModalOpen: true
+            ShowDomain: item,
+            isDomainModalOpen: true
         });
     }
 
-    linkActive(item?: ILink, index?: number | undefined, ev?: React.FocusEvent<HTMLElement> | undefined) {
+    linkActive(item?: IDomain, index?: number | undefined, ev?: React.FocusEvent<HTMLElement> | undefined) {
         log.debug(`${JSON.stringify(this._selection)}`)
     }
 
     componentDidMount() {
 
-        this.initLinks();
+        this.initDomains();
 
     }
 
-    async initLinks() {
+    async initDomains() {
 
         if (this.props.user) {
 
             log.debug(`User logged in, calling API`);
             try {
 
-                const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, this.props.user.accessToken);
+                const sourceDomains = await ApiHelper.get(`/_api/v1/domains`, this.props.user.accessToken);
                 this.setState({
-                    LinksLoading: false,
-                    LinksSourceData: sourceLinks
+                    DomainsLoading: false,
+                    DomainsSourceData: sourceDomains
                 });
     
             }
             catch (err) {
                 log.error(`${JSON.stringify(err)}`);
                 this.setState({
-                    LinksLoading: false,
-                    LinksSourceData: []
+                    DomainsLoading: false,
+                    DomainsSourceData: []
                 });
             }
         }
@@ -214,8 +212,8 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
             log.debug(`User not logged in`);
             this.setState({
-                LinksLoading: false,
-                LinksSourceData: []
+                DomainsLoading: false,
+                DomainsSourceData: []
             });
         }
 
@@ -223,31 +221,21 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     addButtonClick() {
         this.setState({
-            isLinkModalOpen: true,
-            ShowLink: undefined
+            isDomainModalOpen: true,
+            ShowDomain: undefined
         });
     }
 
     closeAddModalClick() {
         this.setState({
-            isLinkModalOpen: false
+            isDomainModalOpen: false
         });
     }
 
-    deleteLinks() {
+    deleteDomains() {
         const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
-        log.debug(`deleteLinks() ${JSON.stringify(items)}`);
-        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as ILink).rowKey}`, this.props.user.accessToken); });
-
-        if (promises.length > 0) {
-            this.performPromiseActions(promises);
-        }
-    }
-
-    restoreLinks() {
-        const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
-        log.debug(`restoreLinks() ${JSON.stringify(items)}`);
-        const promises = items.map(link => { return ApiHelper.patch(`/_api/v1/redirect/${(link as ILink).rowKey}`, { recycled: false }, this.props.user.accessToken); });
+        log.debug(`deleteDomains() ${JSON.stringify(items)}`);
+        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as IDomain).rowKey}`, this.props.user.accessToken); });
 
         if (promises.length > 0) {
             this.performPromiseActions(promises);
@@ -256,7 +244,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     async performPromiseActions(promises: Promise<void>[]) {
         await Promise.all(promises);
-        this.initLinks();
+        this.initDomains();
     }
 
     applySorting(items: any, sorting: ISortingInformation[]) {
@@ -289,42 +277,25 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
     render() {
 
         const commandBarItems = [];
-        !this.props.recycled && commandBarItems.push({
-            key: "addlink",
-            text: "Add a link",
-            iconProps: { iconName: "AddLink" },
+        commandBarItems.push({
+            key: "adddomain",
+            text: "Add a domain",
+            iconProps: { iconName: "AddDomain" },
             onClick: this.addButtonClick
         });
         commandBarItems.push({
             key: "refresh",
             text: "Refresh",
             iconProps: { iconName: "Refresh" },
-            onClick: this.initLinks
+            onClick: this.initDomains
         });
-        this.props.recycled && 
-            commandBarItems.push({
-                key: "deletelink",
-                text: `Delete link`,
-                iconProps: { iconName: "Delete" },
-                disabled: this.state.numberOfLinksSelected === 0,
-                onClick: this.deleteLinks
-            });
-        this.props.recycled && 
-            commandBarItems.push({
-                key: "restoreLink",
-                text: `Restore`,
-                iconProps: { iconName: "Undo" },
-                disabled: this.state.numberOfLinksSelected === 0,
-                onClick: this.restoreLinks
-            });
-        !this.props.recycled && 
-            commandBarItems.push({
-                key: "recycleLink",
-                text: `Recycle`,
-                iconProps: { iconName: "RecycleBin" },
-                disabled: this.state.numberOfLinksSelected === 0,
-                onClick: this.deleteLinks
-            });
+        commandBarItems.push({
+            key: "deletedomain",
+            text: `Delete domain`,
+            iconProps: { iconName: "Delete" },
+            disabled: this.state.numberOfDomainsSelected === 0,
+            onClick: this.deleteDomains
+        });
 
         const commandBarFarItems = [
             {
@@ -356,21 +327,21 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
             },
         };
 
-        const columns = new LinksColumns();
-        // const items = this.state.LinksSourceData;
+        const columns = new DomainsColumns();
+        // const items = this.state.DomainsSourceData;
 
         const items = this.applySorting(
-            (this.state.LinksSearchData || this.state.LinksSourceData),
-            this.state.LinksSorting
+            (this.state.DomainsSearchData || this.state.DomainsSourceData),
+            this.state.DomainsSorting
         );
 
         return (
             <>
                 <Navigation />
-                <main id={`viewport`} className={styles.Links}>
+                <main id={`viewport`} className={styles.Domains}>
                     <DocumentMeta {...meta} />
                     <Header />
-                    <h1>{this.props.recycled ? `Recycle bin` : `Active Links`}</h1>
+                    <h1>{`Domains`}</h1>
                     <CommandBar styles={{ root: { padding: 0 } }}
                         items={commandBarItems}
                         farItems={commandBarFarItems} />
@@ -380,9 +351,9 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                             items={items}
                             compact={false}
                             columns={columns.Columns(
-                                this.linksColumnClick,
-                                this.state.LinksSorting,
-                                this.state.LinksLoading
+                                this.domainsColumnClick,
+                                this.state.DomainsSorting,
+                                this.state.DomainsLoading
                             )}
                             selectionMode={SelectionMode.multiple}
                             getKey={this._getKey}
@@ -401,7 +372,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
                     <Modal
                         titleAriaId={`modalHeader`}
-                        isOpen={this.state.isLinkModalOpen}
+                        isOpen={this.state.isDomainModalOpen}
                         onDismiss={this.closeAddModalClick}
                         isBlocking={false}
                         containerClassName={styles.modalContainer}
@@ -416,11 +387,11 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
                             />
                         </div>
                         <div className={styles.modalBody}>
-                            <AddLink 
-                                rowKey={this.state.ShowLink?.rowKey}
+                            <AddDomain 
+                                rowKey={this.state.ShowDomain?.rowKey}
                                 dismissClick={this.closeAddModalClick} 
                                 user={this.props.user} 
-                                refreshCallback={this.initLinks} />
+                                refreshCallback={this.initDomains} />
                         </div>
                     </Modal>
 
