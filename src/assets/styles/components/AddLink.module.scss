@@ -11,6 +11,12 @@
 
 .addLink {
   padding: 0 24px 24px 24px;
+
+  &.statsExpanded {
+    min-width: 600px;
+    min-height: 500px;
+  }
+
 }
 
 .buttonContainer {
@@ -22,6 +28,7 @@
   margin-right: 16px;
 }
 
-.cancelButton {
+.cancelButton, .copyButton {
   margin-right: 16px;
 }
+

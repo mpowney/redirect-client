@@ -5,7 +5,9 @@ import { TextField } from "office-ui-fabric-react/lib/TextField";
 import { PrimaryButton, DefaultButton } from "office-ui-fabric-react/lib/Button";
 
 import copy from 'copy-to-clipboard';
-
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
+  
+  
 import Config from "../common/utils/Config";
 import ApiHelper from "../common/utils/ApiHelper";
 import { IUser } from "../App";
@@ -29,6 +31,8 @@ interface IAddLinkState {
     generateError: boolean;
     isLoading: boolean;
     editMode: boolean;
+    statsExpanded: boolean;
+    statsMarkers: any;
 }
 
 export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
@@ -47,7 +51,9 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
             hasGenerated: false,
             generateError: false,
             isLoading: false,
-            editMode: false
+            editMode: false,
+            statsExpanded: false,
+            statsMarkers: null
         }
 
         this.generateClick = this.generateClick.bind(this);
@@ -55,6 +61,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         this.saveClick = this.saveClick.bind(this);
         this.copyClick = this.copyClick.bind(this);
         this.checkForEnterKey = this.checkForEnterKey.bind(this);
+        this.statsClick = this.statsClick.bind(this);
 
     }
 
@@ -199,6 +206,31 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         this.props.dismissClick();
     }
 
+    statsClick() {
+        log.info(`statsClick() executing`);
+        this.setState({
+            statsExpanded: !this.state.statsExpanded
+        }, async () => {
+            if (this.state.statsExpanded) {
+                const geoData = await ApiHelper.get(`/_api/v1/redirect/${this.state.shortName}/geo`, this.props.user.accessToken);
+                log.debug(`geoData: ${JSON.stringify(geoData)}`);
+
+                const geoStats = geoData && Object.keys(geoData).map((key: string, index: number) => {
+                    log.debug(`geoData geoStats map: ${JSON.stringify(geoData[key])}`)
+                    return { 
+                        name: `${geoData[key].city}: ${geoData[key].clickCount}`,
+                        markerOffset: -25,
+                        coordinates: [geoData[key].longitude, geoData[key].latitude]
+                    };
+                });
+
+                if (geoStats) {
+                    this.setState({statsMarkers: geoStats});
+                }
+            }
+        });
+    }
+
     isValidURL(str: string) {
         var pattern = new RegExp('^(https?:\\/\\/)'+ // protocol
           '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
@@ -212,12 +244,57 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
     render() {
 
         const generateButtonActive = this.isValidURL(this.state.redirectTo);
+        const geoUrl = "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
+
+        log.debug(`render() this.state.statsMarkers: ${JSON.stringify(this.state.statsMarkers)}`);
+      
         return (
-            <div className={styles.addLink}>
+            <div className={`${styles.addLink} ${this.state.statsExpanded && styles.statsExpanded}`}>
             
                 <h2 id={`modalHeader`}>{this.state.isLoading ? `Loading...` : this.state.editMode ? `Edit a redirect` : `Add a redirect`}</h2>
                 <TextField value={this.state.redirectTo} label={`Redirect to`} onKeyUp={this.checkForEnterKey} disabled={this.state.isLoading} placeholder={`Enter the URL to link to`} className={styles.LinkField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `redirectTo`, value) } componentRef={this.urlRef} />
                 <TextField value={this.state.shortName} label={`Short name`} onKeyUp={this.checkForEnterKey} disabled={this.state.isLoading || this.state.hasGenerated} prefix={`${this.state.shortPrefix}`} placeholder={`Leave blank to generate random short name`} className={styles.ShortNameField} onChange={(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string) => this.updateState(event, `shortName`, value) } />
+
+                { this.state.statsExpanded && <div className={styles.statsSection}>
+                    <ComposableMap
+                        projection="geoMercator"
+                        projectionConfig={{
+                            // rotate: [58, 20, 0],
+                            scale: 100
+                        }}
+                        >
+                            <ZoomableGroup zoom={1}>
+                                <Geographies geography={geoUrl}>
+                                    {({ geographies }) =>
+                                        geographies.map(geo => (
+                                            <Geography 
+                                            key={geo.rsmKey} 
+                                            geography={geo}
+                                            fill="#ccc"
+                                            stroke="#EAEAEC"
+                                            strokeWidth="0.5"
+                                            />
+                                        ))}
+                                </Geographies>
+
+                                {this.state.statsMarkers && this.state.statsMarkers.map((marker: any) => { return (
+                                    <Marker key={marker.name} coordinates={marker.coordinates}>
+                                        <circle r={10} fill="#F00" stroke="#fff" strokeWidth={2} />
+                                        <text
+                                            textAnchor="middle"
+                                            y={marker.markerOffset}
+                                            style={{ fontFamily: "system-ui", fill: "#5D5A6D" }}>
+                                            {marker.name}
+                                        </text>
+                                    </Marker>);
+                                })}
+
+                            </ZoomableGroup>
+
+                        </ComposableMap>
+
+                    </div>}    
+
 
                 <div className={styles.buttonContainer}>
                     { this.state.editMode ? 
@@ -226,7 +303,8 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
                         <PrimaryButton text={this.state.hasGenerated ? `Close` : `Generate`} onClick={this.generateClick} className={styles.generateButton} disabled={!generateButtonActive} />
                     }
                     <DefaultButton text={`Cancel`} onClick={this.cancelClick} className={styles.cancelButton} />
-                    {this.state.hasGenerated && <DefaultButton text={`Copy`} onClick={this.copyClick} /> }
+                    {this.state.hasGenerated && <DefaultButton text={`Copy`} onClick={this.copyClick} className={styles.copyButton} /> }
+                    {this.state.hasGenerated && <DefaultButton text={`Stats`} onClick={this.statsClick} /> }
                 </div>
             </div>
         );
