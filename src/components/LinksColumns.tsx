@@ -78,6 +78,25 @@ export default class LinksColumns {
                     return isLoading ? <Shimmer width={`${70 + Math.floor(Math.random() * 10)}%`} /> : <>{DateTime.fromISO(item.created).toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}</>;
                 },
                 isPadded: true
+            },
+            {
+                key: `clickCount`,
+                name: "Clicks",
+                fieldName: "clickCount",
+                minWidth: 40,
+                maxWidth: 60,
+                isResizable: true,
+                sortAscendingAriaLabel: "Sorted lowest to highest",
+                sortDescendingAriaLabel: "Sorted highest to lowest",
+                isCollapsible: true,
+                data: "number",
+                onColumnClick: (event: any, column: any) => {
+                    onColumnClick(event, column);
+                },
+                onRender: (item: ILink) => {
+                    return isLoading ? <Shimmer width={`${70 + Math.floor(Math.random() * 10)}%`} /> : <>{item.clickCount}</>;
+                },
+                isPadded: true
             }
         ];
 
