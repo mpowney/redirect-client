@@ -194,7 +194,7 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
             log.debug(`User logged in, calling API`);
             try {
 
-                const sourceDomains = await ApiHelper.get(`/_api/v1/domains`, this.props.user.accessToken);
+                const sourceDomains = await ApiHelper.get(`/_api/v1/domains`, true);
                 this.setState({
                     DomainsLoading: false,
                     DomainsSourceData: sourceDomains
@@ -240,7 +240,7 @@ export default class DomainsEntry extends React.Component<IDomainsProps, IDomain
     deleteDomains() {
         const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
         log.debug(`deleteDomains() ${JSON.stringify(items)}`);
-        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as IDomain).rowKey}`, this.props.user.accessToken); });
+        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as IDomain).rowKey}`, true); });
 
         if (promises.length > 0) {
             this.performPromiseActions(promises);

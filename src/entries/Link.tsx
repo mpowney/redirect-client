@@ -56,7 +56,7 @@ export default class UserEntry extends React.Component<ILinkProps, ILinkState> {
 
     async saveButtonClick() {
         log.debug(`User logged in, calling API`);
-        await ApiHelper.patch(`/_api/v1/redirect`, this.state.link, this.props.user.accessToken);
+        await ApiHelper.patch(`/_api/v1/redirect`, this.state.link, true);
         this.setState({
             originalLink: JSON.parse(JSON.stringify(this.state.link)),
             editMode: false

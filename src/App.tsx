@@ -1,17 +1,16 @@
 import * as React from "react";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import { initializeIcons } from "office-ui-fabric-react/lib/Icons";
-import * as Msal from "msal";
+import "office-ui-fabric-core/dist/css/fabric.min.css";
 
 import { API_BASE } from "./config/env";
+import ApiHelper from "./common/utils/ApiHelper";
 import routes from "./routes";
 
 import theme from "./assets/styles/theme";
 import TopBar from "./components/TopBar";
 import { Customizations } from "@uifabric/utilities";
 import { LogFactory } from "./common/utils/InitLogger";
-import Config from "./common/utils/Config";
-import "office-ui-fabric-core/dist/css/fabric.min.css";
 import { Modal } from "office-ui-fabric-react/lib/Modal";
 import { PrimaryButton } from "office-ui-fabric-react/lib/Button";
 
@@ -31,8 +30,6 @@ export const Routes = routes;
 export interface IUser {
     loginName: string;
     displayName: string;
-    accessToken: string;
-    accessTokenExpires: Date;
 }
 
 export interface IAppProps {}
@@ -46,10 +43,7 @@ export interface IAppState {
 // Browser App entry
 export default class App extends React.Component<IAppProps, IAppState> {
 
-    private accessTokenTimeout: number = 0;
-    private msalConfig: any;
-    private msalLoginRequest: any;
-    private msalInstance: Msal.UserAgentApplication | undefined = undefined;
+    private apiHelper: ApiHelper;
 
     constructor(props: IAppProps) {
 
@@ -71,33 +65,13 @@ export default class App extends React.Component<IAppProps, IAppState> {
             this.initLogin();
         });
 
+        this.apiHelper = new ApiHelper();
+
     }
 
     public async init() {
 
-        const config = new Config();
-
-        this.msalConfig = {
-            auth: {
-                clientId: `${await config.get(`AAD Application Client ID`)}`,
-                authority: `https://login.windows.net/${await config.get(`AAD Tenant ID`)}`,
-                postLogoutRedirectUri: `${window.location.protocol}//${window.location.host}`,
-                // redirectUri: `https://redirect-api-ause.azurewebsites.net/_api/v1/test`,
-                // redirectUri: `${window.location.href}`,
-                redirectUri: `${window.location.protocol}//${window.location.host}`,
-                // validateAuthority: false
-            }
-        };
-
-        this.msalLoginRequest = {
-            // scopes: ['User.ReadWrite.All'] // optional Array<string>
-            // scopes: ['openid', 'profile', 'email']
-            scopes: [`${API_BASE}/user_impersonation`]
-        };
-
-        this.msalInstance = new Msal.UserAgentApplication(this.msalConfig);
-
-        if (!!!this.msalInstance.getAccount()) {
+        if (!!!this.apiHelper?.getAccount()) {
             this.setState({
                 loginModalOpen: true
             });
@@ -109,64 +83,39 @@ export default class App extends React.Component<IAppProps, IAppState> {
 
         log.debug(`handleLogin() executing`);
 
-        if (this.msalInstance) {
-
-            this.msalInstance.handleRedirectCallback((error: any, response: any) => {
-                // handle redirect response or error
-                if (error) {
-                    log.error(error.errorMessage);
-                } else if (response) {
-                    log.debug(`Response from MSAL: ${response.account}`);
-                }
-            });
-    
-            try {
-                if (this.msalInstance.getAccount() == null || this.state.loginModalRecover) {
-                    const loginResponse = await this.msalInstance.loginPopup(this.msalLoginRequest);
-                    log.debug(`loginResponse: ${JSON.stringify(loginResponse)}`);
-                }
-    
-                await this.initLogin();
-    
-            } catch (err) {
-                log.error(`Error occurred during loginPopup: ${err}`);
+        try {
+            if (this.apiHelper.getAccount() == null || this.state.loginModalRecover) {
+                const loginResponse = await this.apiHelper.loginPopup();
+                log.debug(`loginResponse: ${JSON.stringify(loginResponse)}`);
             }
-    
-        }
 
+            await this.initLogin();
+
+        } catch (err) {
+            log.error(`Error occurred during loginPopup: ${err}`);
+        }
+    
     }
 
     public async initLogin() {
 
-        if (this.msalInstance) {
+        if (await this.apiHelper.getAccount()) {
 
-            if (this.msalInstance.getAccount() != null) {
+            this.setState({
+                userLoggedIn: true,
+                user: { 
+                    loginName: (await this.apiHelper.getAccount())?.userName || '', 
+                    displayName: (await this.apiHelper.getAccount())?.name || '',
+                },
+                loginModalOpen: false,
+                loginModalRecover: false
+            });
 
-                try {
-                    const tokenResponse = await this.msalInstance.acquireTokenSilent(this.msalLoginRequest);
-                    log.debug(`Response from AAD: ${JSON.stringify(tokenResponse)}`);
-
-                    if (tokenResponse.accessToken !== null) {
-                        this.setState({
-                            userLoggedIn: true,
-                            user: { 
-                                loginName: this.msalInstance.getAccount().userName, 
-                                displayName: this.msalInstance.getAccount().name,
-                                accessToken: tokenResponse.accessToken,
-                                accessTokenExpires: new Date(tokenResponse.expiresOn)
-                            },
-                            loginModalOpen: false,
-                            loginModalRecover: false
-                        });
-                    }
-                }
-                catch (err) {
-                    log.error(`Error occurred during initLogin(): ${err}`);
-                    this.setState({
-                        loginModalRecover: true
-                    });
-                }
-            }
+        }
+        else {
+            this.setState({
+                loginModalRecover: true
+            });
         }
     }
 
@@ -175,11 +124,7 @@ export default class App extends React.Component<IAppProps, IAppState> {
     }
 
     public async handleLogout() {
-        if (this.msalInstance) {
-
-            this.msalInstance.logout();
-
-        }
+        this.apiHelper.logout();
     }
 
     public hideLoginModal() {
@@ -208,14 +153,6 @@ export default class App extends React.Component<IAppProps, IAppState> {
                 />
             );
         };
-
-        const { DateTime } = require("luxon");
-        if (this.state.user && this.state.user.accessTokenExpires) {
-            const diffDuration = DateTime.fromJSDate(this.state.user.accessTokenExpires).diff(DateTime.local(), "seconds");
-            log.debug(`render() accessTokenExpires diff ${JSON.stringify(diffDuration.seconds)}`);
-            window.clearTimeout(this.accessTokenTimeout);
-            this.accessTokenTimeout = window.setTimeout(this.renewAccessToken, diffDuration.seconds * 1000);
-        }
 
         return (
             <>

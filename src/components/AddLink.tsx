@@ -80,7 +80,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
             this.setState({
                 isLoading: true
             });
-            const response = await ApiHelper.get(`/_api/v1/redirect/${this.props.rowKey}`, this.props.user.accessToken);
+            const response = await ApiHelper.get(`/_api/v1/redirect/${this.props.rowKey}`, true);
             log.debug(`init() response from api get ${JSON.stringify(response)}`)
             this.setState({
                 redirectTo: response.redirectTo,
@@ -133,7 +133,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
         }, async () => {
             let linkExists: boolean = false;
             try {
-                const existingLink = await ApiHelper.get(`/_api/v1/redirect/${this.state.shortName}`, this.props.user.accessToken).catch();
+                const existingLink = await ApiHelper.get(`/_api/v1/redirect/${this.state.shortName}`, true).catch();
                 if (existingLink) linkExists = true;
             }
             catch {}
@@ -151,7 +151,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
                     await ApiHelper.post(`/_api/v1/redirect`, {
                         redirectTo: this.state.redirectTo,
                         rowKey: this.state.shortName
-                    }, this.props.user.accessToken);
+                    }, true);
                     this.setState({
                         hasGenerated: true
                     });
@@ -179,7 +179,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
 
         await ApiHelper.patch(`/_api/v1/redirect/${this.state.shortName}`, {
             redirectTo: this.state.redirectTo
-        }, this.props.user.accessToken);
+        }, true);
         this.setState({
             hasGenerated: true
         });
@@ -212,7 +212,7 @@ export class AddLink extends React.Component<IAddLinkProps, IAddLinkState> {
             statsExpanded: !this.state.statsExpanded
         }, async () => {
             if (this.state.statsExpanded) {
-                const geoData = await ApiHelper.get(`/_api/v1/redirect/${this.state.shortName}/geo`, this.props.user.accessToken);
+                const geoData = await ApiHelper.get(`/_api/v1/redirect/${this.state.shortName}/geo`, true);
                 log.debug(`geoData: ${JSON.stringify(geoData)}`);
 
                 const geoStats = geoData && Object.keys(geoData).map((key: string, index: number) => {

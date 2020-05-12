@@ -89,7 +89,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         this.state = {
             isLinkModalOpen: false,
             numberOfLinksSelected: 0,
-            LinksSorting: [],
+            LinksSorting: [ { fieldName: 'created', isSorted: true, isSortedDescending: true } ],
             LinksLoading: true,
             LinksSearch: "",
             ShowLink: undefined,
@@ -198,7 +198,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
             log.debug(`User logged in, calling API`);
             try {
 
-                const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, this.props.user.accessToken);
+                const sourceLinks = await ApiHelper.get(this.props.recycled ? `/_api/v1/redirects/recycled` : `/_api/v1/redirects`, true);
                 this.setState({
                     LinksLoading: false,
                     LinksSourceData: sourceLinks
@@ -244,7 +244,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
     deleteLinks() {
         const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
         log.debug(`deleteLinks() ${JSON.stringify(items)}`);
-        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as ILink).rowKey}`, this.props.user.accessToken); });
+        const promises = items.map(link => { return ApiHelper.delete(`/_api/v1/redirect/${(link as ILink).rowKey}`, true); });
 
         if (promises.length > 0) {
             this.performPromiseActions(promises);
@@ -254,7 +254,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
     restoreLinks() {
         const items = this._selection.getSelectedIndices().map(index => { return this._selection.getItems()[index]});
         log.debug(`restoreLinks() ${JSON.stringify(items)}`);
-        const promises = items.map(link => { return ApiHelper.patch(`/_api/v1/redirect/${(link as ILink).rowKey}`, { recycled: false }, this.props.user.accessToken); });
+        const promises = items.map(link => { return ApiHelper.patch(`/_api/v1/redirect/${(link as ILink).rowKey}`, { recycled: false }, true); });
 
         if (promises.length > 0) {
             this.performPromiseActions(promises);

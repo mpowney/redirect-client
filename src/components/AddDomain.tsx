@@ -50,7 +50,7 @@ export class AddDomain extends React.Component<IAddDomainProps, IAddDomainState>
             this.setState({
                 isLoading: true
             });
-            const response = await ApiHelper.get(`/_api/v1/domain/${this.props.rowKey}`, this.props.user.accessToken);
+            const response = await ApiHelper.get(`/_api/v1/domain/${this.props.rowKey}`, true);
             log.debug(`init() response from api get ${JSON.stringify(response)}`)
             this.setState({
                 domain: response,
@@ -81,7 +81,7 @@ export class AddDomain extends React.Component<IAddDomainProps, IAddDomainState>
         
         let domainExists: boolean = false;
         try {
-            const existingDomain = await ApiHelper.get(`/_api/v1/domain/${this.state.domainName}`, this.props.user.accessToken).catch();
+            const existingDomain = await ApiHelper.get(`/_api/v1/domain/${this.state.domainName}`, true).catch();
             if (existingDomain) domainExists = true;
         }
         catch {}
@@ -97,7 +97,7 @@ export class AddDomain extends React.Component<IAddDomainProps, IAddDomainState>
 
                 await ApiHelper.post(`/_api/v1/domain`, {
                     rowKey: this.state.domainName
-                }, this.props.user.accessToken);
+                }, true);
                 await this.props.refreshCallback();
 
             }
@@ -119,7 +119,7 @@ export class AddDomain extends React.Component<IAddDomainProps, IAddDomainState>
 
     //     await ApiHelper.patch(`/_api/v1/domain/${this.state.domainName}`, {
     //         configured: this.state.
-    //     }, this.props.user.accessToken);
+    //     }, true);
     //     this.setState({
     //         hasGenerated: true
     //     });
