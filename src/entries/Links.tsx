@@ -4,18 +4,20 @@ import DocumentMeta from "react-document-meta";
 import { CommandBar } from "office-ui-fabric-react/lib/CommandBar";
 import { SearchBox } from "office-ui-fabric-react/lib/SearchBox";
 import { Modal, IDragOptions } from "office-ui-fabric-react/lib/Modal";
+import { IColumn, SelectionMode, DetailsListLayoutMode, DetailsList, Selection } from "office-ui-fabric-react/lib/DetailsList";
+import { IconButton } from "office-ui-fabric-react/lib/Button";
+import { ContextualMenu } from "office-ui-fabric-react/lib/ContextualMenu";
+import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
+
+import ReactShortcut from 'react-shortcut';
 
 import Navigation from "../components/Navigation";
 import Header from "../components/Header";
 import { LogFactory } from "../common/utils/InitLogger";
 import LinksColumns from "../components/LinksColumns";
 import ISortingInformation from "../common/utils/ISortingInformation";
-import { IColumn, SelectionMode, DetailsListLayoutMode, DetailsList, Selection } from "office-ui-fabric-react/lib/DetailsList";
 import { IUser } from "../App";
 import ApiHelper from "../common/utils/ApiHelper";
-import { IconButton } from "office-ui-fabric-react/lib/Button";
-import { ContextualMenu } from "office-ui-fabric-react/lib/ContextualMenu";
-import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
 import { AddLink } from "../components/AddLink";
 
 const log = LogFactory.getLogger("Links.tsx");
@@ -71,6 +73,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
         this.linkActive = this.linkActive.bind(this);
         this.closeAddModalClick = this.closeAddModalClick.bind(this);
         this.addButtonClick = this.addButtonClick.bind(this);
+        this.refreshButtonClick = this.refreshButtonClick.bind(this);
         this.initLinks = this.initLinks.bind(this);
         this.deleteLinks = this.deleteLinks.bind(this);
         this.restoreLinks = this.restoreLinks.bind(this);
@@ -221,6 +224,10 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
 
     };
 
+    refreshButtonClick() {
+        this.initLinks();
+    }
+
     addButtonClick() {
         this.setState({
             isLinkModalOpen: true,
@@ -299,7 +306,7 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
             key: "refresh",
             text: "Refresh",
             iconProps: { iconName: "Refresh" },
-            onClick: this.initLinks
+            onClick: this.refreshButtonClick
         });
         this.props.recycled && 
             commandBarItems.push({
@@ -368,6 +375,12 @@ export default class LinksEntry extends React.Component<ILinksProps, ILinksState
             <>
                 <Navigation />
                 <main id={`viewport`} className={styles.Links}>
+                    <ReactShortcut
+                        keys={[`Ctrl+A`]}
+                        onKeysPressed={this.addButtonClick}/>
+                    <ReactShortcut
+                        keys={[`Ctrl+R`]}
+                        onKeysPressed={this.refreshButtonClick}/>
                     <DocumentMeta {...meta} />
                     <Header />
                     <h1>{this.props.recycled ? `Recycle bin` : `Active Links`}</h1>
