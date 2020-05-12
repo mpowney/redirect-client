@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import { initializeIcons } from "office-ui-fabric-react/lib/Icons";
 import "office-ui-fabric-core/dist/css/fabric.min.css";
 
-import { API_BASE } from "./config/env";
 import ApiHelper from "./common/utils/ApiHelper";
 import routes from "./routes";
 
