@@ -22,10 +22,6 @@ h4 {
   font-weight: 100;
 }
 
-#appContainer {
-  margin: 8px;
-  display: flex;
-}
 #viewport {
   padding-left: 48px;
   padding-right: 48px;
@@ -33,7 +29,9 @@ h4 {
 }
 
 @media (max-width: 800px) {
-  #appContainer {
-    background-image: none;
-  }
+  #viewport {
+    padding-left: 10px;
+    padding-right: 10px;
+  }  
 }
+
