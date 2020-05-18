@@ -1,6 +1,8 @@
 import * as React from "react";
 
 import { Nav, INavLink } from "office-ui-fabric-react/lib/Nav";
+import { IContextualMenuItem } from "office-ui-fabric-react/lib/ContextualMenu";
+import { DefaultButton } from "office-ui-fabric-react/lib/Button";
 import { LogFactory } from "../common/utils/InitLogger";
 export interface INavigationProps {
 }
@@ -30,29 +32,40 @@ export class Navigation extends React.Component<INavigationProps, INavigationSta
 
         const styles = require("../assets/styles/components/Navigation.module.scss");
 
+        const linkGroups = [
+            {
+                links: [{ key: "Home", name: "Home", url: "/", icon: "Home" }]
+            },
+            {
+                links: [
+                    { key: "Links", name: "Links", url: "/links", icon: "Link" },
+                    { key: "ManageLinks", name: "Manage links", url: "/links" },
+                    { key: "RecycledLinks", name: "Recycle bin", url: "/links/recycled" }
+                ]
+            },
+            {
+                links: [
+                    { key: "Domains", name: "Domains", url: "/domains", icon: "World" },
+                    { key: "ManageDomains", name: "Manage Domains", url: "/domains" },
+                ]
+            }
+        ]
+
+        const menuItems: IContextualMenuItem[] = [];
+        linkGroups.forEach(group => { group.links.forEach(link => { menuItems.push({ key: link.key, text: link.name, href: link.url, iconName: link.icon })})});
+
         return (
             <div className={styles.navigation}>
                 <Nav onLinkClick={this.itemClick}
+                    className={styles.nav}
                     styles={{ root: { width: 280 }, groupContent: { marginBottom: 0 } }}
-                    groups={[
-                        {
-                            links: [{ key: "Home", name: "Home", url: "/", icon: "Home" }]
-                        },
-                        {
-                            links: [
-                                { key: "Links", name: "Links", url: "/links", icon: "Link" },
-                                { key: "ManageLinks", name: "Manage links", url: "/links" },
-                                { key: "RecycledLinks", name: "Recycle bin", url: "/links/recycled" }
-                            ]
-                        },
-                        {
-                            links: [
-                                { key: "Domains", name: "Domains", url: "/domains", icon: "World" },
-                                { key: "ManageDomains", name: "Manage Domains", url: "/domains" },
-                            ]
-                        }
-                    ]}
+                    groups={linkGroups}
                 />
+                <DefaultButton iconProps={{iconName: 'GlobalNavButton'}} className={styles.menu} menuProps={{
+                    shouldFocusOnMount: true,
+                    items: menuItems,
+                    isBeakVisible: false
+                    }} />
             </div>
         );
     }
