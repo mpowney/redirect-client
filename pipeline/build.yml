@@ -2,6 +2,8 @@ name: $(SourceBranchName)_1.0.$(Date:yyMM).$(DayOfMonth)$(Rev:r)
 
 jobs:
 - job: Bundle
+  pool:
+    vmImage: 'ubuntu-latest'
   displayName: Bundle
   steps:
   - task: NodeTool@0
